@@ -33,6 +33,17 @@ fillZeros s n = ('0' : fillZeros s (n-1))
 --Component 2
 
 --Component 3
+searchCache [] _ oldestIndex _ = oldestIndex
+searchCache ((It (T _) (D _) validBit order):xs) index oldestIndex oldestOrder
+    | validBit == False = index
+    | oldestOrder < order = (searchCache xs (index + 1) index order)
+    | otherwise = (searchCache xs (index + 1) oldestIndex oldestOrder)
+
+incrementCache [] = []
+incrementCache ((It (T tag) (D d) validBit order):xs)
+    | validBit = (It (T tag) (D d) validBit (order+1)):incrementCache(xs)
+    | otherwise = (It (T tag) (D d) validBit order):incrementCache(xs)
+    
 
 replaceInCache :: Integral b => Int -> Int -> [a] -> [Item a] -> [Char] -> b -> (a, [Item a])
 replaceInCache tag idx memory oldCache "directMap" bitsNum = (retrievedData , newCache) 
@@ -41,5 +52,10 @@ replaceInCache tag idx memory oldCache "directMap" bitsNum = (retrievedData , ne
         retrievedData = memory !! convertBinToDec(indexInMemoryBin) 
         newCache = replaceIthItem ((It (T tag) (D retrievedData) True 0)) oldCache (convertBinToDec(idx))
 
---replaceInCache tag idx memory oldCache "fullyAssoc" bitsNum = ()
-  --  where
+replaceInCache tag idx memory oldCache "fullyAssoc" bitsNum = (retrievedData , newCache)
+    where
+        retrievedData = memory !! convertBinToDec(tag)
+        indexToPutAt = searchCache oldCache 0 (-1) (-1)
+        midCache = incrementCache oldCache
+        newCache = replaceIthItem ((It (T tag) (D retrievedData) True 0)) midCache indexToPutAt
+        
