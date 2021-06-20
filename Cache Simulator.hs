@@ -13,13 +13,14 @@ replaceIthItem :: (Eq a, Num a) => t -> [t] -> a -> [t]
 replaceIthItem a (x:xs) 0 = (a:xs)
 replaceIthItem a (x:xs) i = x:(replaceIthItem a xs (i-1))
 
-splitEvery :: Int -> [a] -> [[a]]
+{-splitEvery :: Int -> [a] -> [[a]]
 splitEvery n l = [splitEveryHelper n n l]
 splitEveryHelper _ _ [] = []
 splitEveryHelper n 0 (x:xs) = (x:(splitEveryHelper n n xs))
-splitEveryHelper n c (x:xs) = [x] ++ splitEveryHelper n (c-1) xs
+splitEveryHelper n c (x:xs) = [x] ++ splitEveryHelper n (c-1) xs-}
 
---splitEvery n l = split
+splitEvery n l = if 
+splitEvery n (x:xs) = (a:splitEvery n xs) where (a,b) = splitAt n (x:xs)
 
 logBase2 :: Floating a => a -> a
 logBase2 num = logBase 2 num
