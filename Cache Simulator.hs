@@ -28,9 +28,32 @@ fillZeros :: [Char] -> Int -> [Char]
 fillZeros s 0 = s
 fillZeros s n = ('0' : fillZeros s (n-1))
 
---Component 1
+--Component 1 & 2
+--convertAddress:: (Integral b1, Integral b2) => b1 -> b2 -> p -> (b1, b1) NOT NEEDED
+convertAddress binAddress bitsNum "directMap" = ((div binAddress (10 ^ bitsNum)), (mod binAddress (10 ^ bitsNum)))
+convertAddress binAddress bitsNum "setAssoc"  = ((div binAddress (10 ^ bitsNum)), (mod binAddress (10 ^ bitsNum)))
 
---Component 2
+searchSet _ [] _ = NoOutput
+searchSet t ((It (T tag) (D d) validBit _):xs) acc 
+    | (validBit == True) && (tag == t) = Out (d,acc)
+    | otherwise = searchSet t xs (acc + 1)
+--getDataFromCache :: (Integral b, Eq a) => [Char] -> [Item a] -> [Char] -> b -> Output a
+data Output a = Out (a, Int) | NoOutput deriving (Show, Eq)
+getDataFromCache stringAddress cache "directMap" bitsNum
+    | tag == fst(convertAddress (read stringAddress :: Int) bitsNum "directMap") = Out (d,0)
+    | otherwise = NoOutput
+        where 
+            indx = convertBinToDec (snd(convertAddress (read stringAddress :: Int) bitsNum "directMap"))
+            (It (T tag) (D d) validBit order) = cache !! indx
+
+getDataFromCache stringAddress cache "setAssoc" bitsNum = searchSet tag cache 0
+    where 
+        tag = fst(convertAddress (read stringAddress :: Int) bitsNum "setAssoc")
+        ind = snd(convertAddress (read stringAddress :: Int) bitsNum "setAssoc")
+        list = (splitEvery (2^bitsNum) cache) !! ind
+        
+        
+
 
 --Component 3
 searchCache [] _ oldestIndex _ = oldestIndex
