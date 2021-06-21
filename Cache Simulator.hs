@@ -29,7 +29,7 @@ fillZeros s 0 = s
 fillZeros s n = ('0' : fillZeros s (n-1))
 
 --Component 1 & 2
---convertAddress:: (Integral b1, Integral b2) => b1 -> b2 -> p -> (b1, b1) NOT NEEDED
+--convertAddress:: (Integral b1, Integral b2) => b1 -> b2 -> p -> (b1, b1) Not Needed
 convertAddress binAddress bitsNum "directMap" = ((div binAddress (10 ^ bitsNum)), (mod binAddress (10 ^ bitsNum)))
 convertAddress binAddress bitsNum "setAssoc"  = ((div binAddress (10 ^ bitsNum)), (mod binAddress (10 ^ bitsNum)))
 
@@ -37,7 +37,8 @@ searchSet _ [] _ = NoOutput
 searchSet t ((It (T tag) (D d) validBit _):xs) acc 
     | (validBit == True) && (tag == t) = Out (d,acc)
     | otherwise = searchSet t xs (acc + 1)
---getDataFromCache :: (Integral b, Eq a) => [Char] -> [Item a] -> [Char] -> b -> Output a
+
+getDataFromCache :: (Integral b, Eq a) => [Char] -> [Item a] -> [Char] -> b -> Output a
 data Output a = Out (a, Int) | NoOutput deriving (Show, Eq)
 getDataFromCache stringAddress cache "directMap" bitsNum
     | tag == fst(convertAddress (read stringAddress :: Int) bitsNum "directMap") = Out (d,0)
@@ -50,7 +51,7 @@ getDataFromCache stringAddress cache "setAssoc" bitsNum = searchSet tag cache 0
     where 
         tag = fst(convertAddress (read stringAddress :: Int) bitsNum "setAssoc")
         ind = snd(convertAddress (read stringAddress :: Int) bitsNum "setAssoc")
-        list = (splitEvery (2^bitsNum) cache) !! ind
+        list = (splitEvery ((div (length cache) 2^bitsNum)) cache) !! ind
         
         
 
@@ -71,7 +72,7 @@ incrementCache ((It (T tag) (D d) validBit order):xs)
 replaceInCache :: Integral b => Int -> Int -> [a] -> [Item a] -> [Char] -> b -> (a, [Item a])
 replaceInCache tag idx memory oldCache "directMap" bitsNum = (retrievedData , newCache) 
     where 
-        indexInMemoryBin = tag * (10^bitsNum) + idx
+        indexInMemoryBin = tag * (10 ^ bitsNum) + idx
         retrievedData = memory !! convertBinToDec(indexInMemoryBin) 
         newCache = replaceIthItem ((It (T tag) (D retrievedData) True 0)) oldCache (convertBinToDec(idx))
 
@@ -82,3 +83,32 @@ replaceInCache tag idx memory oldCache "fullyAssoc" bitsNum = (retrievedData , n
         midCache = incrementCache oldCache
         newCache = replaceIthItem ((It (T tag) (D retrievedData) True 0)) midCache indexToPutAt
         
+replaceInCache tag idx memory oldCache "setAssoc" bitsNum = (retrievedData , newCache)
+    where
+        indexInMemoryBin = tag * (10 ^ bitsNum) + idx
+        retrievedData = memory !! convertBinToDec(indexInMemoryBin)
+        setSize = div (length oldCache) (2 ^ bitsNum)
+        listOfSets = splitEvery setSize oldCache
+        theSet = listOfSets !! convertBinToDec(idx)
+        indxInTheSet = searchCache theSet 0 (-1) (-1)
+        newSet = incrementCache theSet
+        newSetWithItm = replaceIthItem ((It (T tag) (D retrievedData) True 0)) newSet indxInTheSet
+        newListOfSets = replaceIthItem newSetWithItm listOfSets (convertBinToDec idx)
+        newCache = foldr (++) [] newListOfSets
+
+--Implemented Fucntions
+getData stringAddress cache memory cacheType bitsNum
+    | x == NoOutput = replaceInCache tag index memory cache cacheType bitsNum
+    | otherwise = (getX x, cache)
+    where
+        x = getDataFromCache stringAddress cache cacheType bitsNum
+        address = read stringAddress:: Int
+        (tag, index) = convertAddress address bitsNum cacheType
+getX (Out (d, _)) = d
+
+runProgram [] cache _ _ _ = ([], cache)
+runProgram (addr: xs) cache memory cacheType numSets = ((d:prevData), finalCache)
+    where
+        bitsNum = round(logBase2 numSets)
+        (d, updatedCache) = getData addr cache memory cacheType bitsNum
+        (prevData, finalCache) = runProgram xs updatedCache memory cacheType numSets
