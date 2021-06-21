@@ -29,13 +29,14 @@ fillZeros s 0 = s
 fillZeros s n = ('0' : fillZeros s (n-1))
 
 --Component 1 & 2
---convertAddress:: (Integral b1, Integral b2) => b1 -> b2 -> p -> (b1, b1) Not Needed
+
+--convertAddress:: (Integral b1, Integral b2) => b1 -> b2 -> p -> (b1, b1) Breaks code
 convertAddress binAddress bitsNum "directMap" = ((div binAddress (10 ^ bitsNum)), (mod binAddress (10 ^ bitsNum)))
 convertAddress binAddress bitsNum "setAssoc"  = ((div binAddress (10 ^ bitsNum)), (mod binAddress (10 ^ bitsNum)))
 
 searchSet _ [] _ = NoOutput
 searchSet t ((It (T tag) (D d) validBit _):xs) acc 
-    | (validBit == True) && (tag == t) = Out (d,acc)
+    | ((validBit == True) && (tag == t)) = Out (d,acc)
     | otherwise = searchSet t xs (acc + 1)
 
 getDataFromCache :: (Integral b, Eq a) => [Char] -> [Item a] -> [Char] -> b -> Output a
@@ -47,16 +48,14 @@ getDataFromCache stringAddress cache "directMap" bitsNum
             indx = convertBinToDec (snd(convertAddress (read stringAddress :: Int) bitsNum "directMap"))
             (It (T tag) (D d) validBit order) = cache !! indx
 
-getDataFromCache stringAddress cache "setAssoc" bitsNum = searchSet tag cache 0
+getDataFromCache stringAddress cache "setAssoc" bitsNum = searchSet tag list 0
     where 
         tag = fst(convertAddress (read stringAddress :: Int) bitsNum "setAssoc")
         ind = snd(convertAddress (read stringAddress :: Int) bitsNum "setAssoc")
         list = (splitEvery ((div (length cache) 2^bitsNum)) cache) !! ind
-        
-        
-
 
 --Component 3
+
 searchCache [] _ oldestIndex _ = oldestIndex
 searchCache ((It (T _) (D _) validBit order):xs) index oldestIndex oldestOrder
     | validBit == False = index
@@ -68,7 +67,6 @@ incrementCache ((It (T tag) (D d) validBit order):xs)
     | validBit = (It (T tag) (D d) validBit (order+1)):incrementCache(xs)
     | otherwise = (It (T tag) (D d) validBit order):incrementCache(xs)
     
-
 replaceInCache :: Integral b => Int -> Int -> [a] -> [Item a] -> [Char] -> b -> (a, [Item a])
 replaceInCache tag idx memory oldCache "directMap" bitsNum = (retrievedData , newCache) 
     where 
@@ -96,7 +94,7 @@ replaceInCache tag idx memory oldCache "setAssoc" bitsNum = (retrievedData , new
         newListOfSets = replaceIthItem newSetWithItm listOfSets (convertBinToDec idx)
         newCache = foldr (++) [] newListOfSets
 
---Implemented Fucntions
+--Pre - Implemented Fucntions
 getData stringAddress cache memory cacheType bitsNum
     | x == NoOutput = replaceInCache tag index memory cache cacheType bitsNum
     | otherwise = (getX x, cache)
