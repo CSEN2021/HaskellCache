@@ -42,7 +42,7 @@ searchSet t ((It (T tag) (D d) validBit _):xs) acc
 getDataFromCache :: (Integral b, Eq a) => [Char] -> [Item a] -> [Char] -> b -> Output a
 data Output a = Out (a, Int) | NoOutput deriving (Show, Eq)
 getDataFromCache stringAddress cache "directMap" bitsNum
-    | (tag == fst(convertAddress (read stringAddress :: Int) bitsNum "directMap")) && (validBit == True) = Out (d,0)
+    | ((tag == fst(convertAddress (read stringAddress :: Int) bitsNum "directMap")) && (validBit == True)) = Out (d,0)
     | otherwise = NoOutput
         where 
             indx = convertBinToDec (snd(convertAddress (read stringAddress :: Int) bitsNum "directMap"))
